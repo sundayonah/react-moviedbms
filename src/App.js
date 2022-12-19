@@ -16,7 +16,7 @@ const App = () => (
   <Router>
     <Header />
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Home />} /> 
       <Route path="/:klephId" element={<Movie />} />
       <Route path="/*" element={<NotFound />} />
     </Routes>
