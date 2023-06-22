@@ -9,10 +9,10 @@ import Spinner from "./Spinner";
 import MovieInfo from "./MovieInfo";
 import MovieInfoBar from "./MovieInfoBar";
 import Actor from "./Actor";
+import { fetchMovie, fetchCredits } from "../API";
+
 // Image
 import NoImage from "../images/no_image.jpg";
-import API from "../API";
-
 const Movie = () => {
   const { movieId } = useParams();
   const [movie, setMovie] = useState({});
@@ -20,21 +20,17 @@ const Movie = () => {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    const fetchMovie = async () => {
+    const fetchMovieData = async () => {
       try {
         setLoading(true);
         setError(false);
 
-        const movieData = await API.fetchMovie(movieId);
-        const credits = await API.fetchCredits(movieId);
-
-        // Get directors only
-        const directors = credits.crew.filter(
-          (member) => member.job === "Director"
-        );
+        const fetchedMovie = await fetchMovie(movieId);
+        const credits = await fetchCredits(movieId);
+        const directors = credits.crew.filter((member) => member.job === "Director");
 
         setMovie({
-          ...movieData,
+          ...fetchedMovie,
           actors: credits.cast,
           directors,
         });
@@ -45,12 +41,13 @@ const Movie = () => {
       }
     };
 
-    fetchMovie();
+    fetchMovieData();
   }, [movieId]);
 
   if (loading) return <Spinner />;
   if (error) return <div>Something went wrong...</div>;
 
+  
   return (
     <>
       <BreadCrumb movieTitle={movie.original_title} />
