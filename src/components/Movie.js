@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 // Config
 import { IMAGE_BASE_URL, POSTER_SIZE } from "../config";
@@ -13,77 +13,69 @@ import Actor from "./Actor";
 import NoImage from "../images/no_image.jpg";
 import API from "../API";
 
-class Movie extends Component {
-  state = {
-    movie: {},
-    loading: true,
-    error: false,
-  };
+const Movie = () => {
+  const { movieId } = useParams();
+  const [movie, setMovie] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  fetchMovie = async () => {
-    const { movieId } = this.props.params;
+  useEffect(() => {
+    const fetchMovie = async () => {
+      try {
+        setLoading(true);
+        setError(false);
 
-    try {
-      this.setState({ error: false, loading: true });
+        const movieData = await API.fetchMovie(movieId);
+        const credits = await API.fetchCredits(movieId);
 
-      const movie = await API.fetchMovie(movieId);
-      const credits = await API.fetchCredits(movieId);
-      // Get directors only
-      const directors = credits.crew.filter(
-        (member) => member.job === "Director"
-      );
+        // Get directors only
+        const directors = credits.crew.filter(
+          (member) => member.job === "Director"
+        );
 
-      this.setState({
-        movie: {
-          ...movie,
+        setMovie({
+          ...movieData,
           actors: credits.cast,
           directors,
-        },
-        loading: false,
-      });
-    } catch (error) {
-      this.setState({ error: true, loading: false });
-    }
-  };
+        });
+        setLoading(false);
+      } catch (error) {
+        setError(true);
+        setLoading(false);
+      }
+    };
 
-  componentDidMount() {
-    this.fetchMovie();
-  }
+    fetchMovie();
+  }, [movieId]);
 
-  render() {
-    const { movie, loading, error } = this.state;
+  if (loading) return <Spinner />;
+  if (error) return <div>Something went wrong...</div>;
 
-    if (loading) return <Spinner />;
-    if (error) return <div>Something went wrong...</div>;
+  return (
+    <>
+      <BreadCrumb movieTitle={movie.original_title} />
+      <MovieInfo movie={movie} />
+      <MovieInfoBar
+        time={movie.runtime}
+        budget={movie.budget}
+        revenue={movie.revenue}
+      />
+      <Grid header="Actors">
+        {movie.actors.map((actor) => (
+          <Actor
+            key={actor.credit_id}
+            name={actor.name}
+            character={actor.character}
+            imageUrl={
+              actor.profile_path
+                ? `${IMAGE_BASE_URL}${POSTER_SIZE}${actor.profile_path}`
+                : NoImage
+            }
+          />
+        ))}
+      </Grid>
+    </>
+  );
+};
 
-    return (
-      <>
-        <BreadCrumb movieTitle={movie.original_title} />
-        <MovieInfo movie={movie} />
-        <MovieInfoBar
-          time={movie.runtime}
-          budget={movie.budget}
-          revenue={movie.revenue}
-        />
-        <Grid header="Actors">
-          {movie.actors.map((actor) => (
-            <Actor
-              key={actor.credit_id}
-              name={actor.name}
-              character={actor.character}
-              imageUrl={
-                actor.profile_path
-                  ? `${IMAGE_BASE_URL}${POSTER_SIZE}${actor.profile_path}`
-                  : NoImage
-              }
-            />
-          ))}
-        </Grid>
-      </>
-    );
-  }
-}
-
-const MovieWithParams = (props) => <Movie {...props} params={useParams()} />;
-
-export default MovieWithParams;
+export default Movie;
