@@ -1,35 +1,54 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
+import API from '../API';
+// Helpers
+import { isPersistedState } from '../helpers';
 
-import API from "../API";
+export const useMovieFetch = (movieId) => {
+   const [state, setState] = useState({});
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState(false);
 
-export const useMovieFetch = (klephId) => {
-  const [state, setState] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+   useEffect(() => {
+      const fetchMovie = async () => {
+         try {
+            setLoading(true);
+            setError(false);
 
-  useEffect(() => {
-    const fetchMovie = async () => {
-      try {
-        setLoading(true);
-        setError(false);
-        // get directors only
-        const directors = credits.crew.filter(
-          (member) => member.job === "Director"
-        );
+            const movie = await API.fetchMovie(movieId);
+            console.log(movie);
+            const credits = await API.fetchCredits(movieId);
+            // Get directors only
+            const directors = credits.crew.filter(
+               (member) => member.job === 'Director'
+            );
 
-        setState({
-          ...Movie,
-          actors: credits.cast,
-          directors,
-        });
-        setLoading(false);
-        const Movie = await API.fetchMovie(klephId);
-        const credits = await API.fetchCredits(klephId);
-      } catch (error) {
-        setError(true);
+            setState({
+               ...movie,
+               actors: credits.cast,
+               directors,
+            });
+
+            setLoading(false);
+         } catch (error) {
+            setError(true);
+         }
+      };
+
+      const sessionState = isPersistedState(movieId);
+
+      if (sessionState) {
+         setState(sessionState);
+         setLoading(false);
+         return;
       }
-    };
-    fetchMovie();
-  }, [klephId]);
-  return { state, loading, error };
+
+      fetchMovie();
+   }, [movieId]);
+
+   // Write to sessionStorage
+   useEffect(() => {
+      sessionStorage.setItem(movieId, JSON.stringify(state));
+   }, [movieId, state]);
+
+   return { state, loading, error };
 };
