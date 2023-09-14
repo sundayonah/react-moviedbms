@@ -3,14 +3,9 @@ import { Link } from 'react-router-dom';
 
 import RMDBLogo from '../../images/react-movie-logo.svg';
 import TMDBLogo from '../../images/tmdb_logo.svg';
+import Favicon from '../../images/faviconReal.svg';
 
-import {
-   Wrapper,
-   Content,
-   LogoImg,
-   TMDBLogoImg,
-   MyAvatar,
-} from './Header.styles';
+import { Wrapper, Content, LogoImg, MyLogo, MyAvatar } from './Header.styles';
 
 const Header = () => (
    <Wrapper>
@@ -21,7 +16,7 @@ const Header = () => (
                <h2>xhunTeq Movie</h2>
             </MyAvatar>
          </Link>
-         {/* <TMDBLogoImg src={TMDBLogo} alt="tmdb-logo" /> */}
+         <MyLogo src={Favicon} alt="tmdb-logo" />
       </Content>
    </Wrapper>
 );
